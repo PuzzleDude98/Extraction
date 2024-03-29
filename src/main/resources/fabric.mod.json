@@ -1,15 +1,15 @@
 {
 	"schemaVersion": 1,
 	"id": "extraction",
-	"version": "${version}",
+	"version": "$0.0.1",
 	"name": "extraction",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Extract pure ores!",
 	"authors": [
-		"Me!"
+		"Puzzle_Dude98"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"sources": "https://github.com/PuzzleDude98/Extraction/"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/extraction/icon.png",
