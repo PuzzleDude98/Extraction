@@ -22,6 +22,7 @@ public class ModEvents {
     private static boolean cameraMoving = false;
     private static Vec3d target;
     private static BlockPos blockPos;
+    private static float targetYaw;
     private static final double CAMERA_MOVE_SPEED = 0.1;
 
     static Entity cam;
@@ -50,6 +51,7 @@ public class ModEvents {
                     cam.setPitch(player.getPitch());
                     MinecraftClient.getInstance().setCameraEntity(cam);
                     target = new Vec3d((blockPos.getX() + 0.5 + (blockFace.getOffsetX() * 1.5)), (blockPos.getY() + 0.5 + (blockFace.getOffsetY() * 1.5)),(blockPos.getZ()) + 0.5 + (blockFace.getOffsetZ() * 1.5));
+                    targetYaw = Math.round((cam.getYaw()%90)/90)*90;
                     cameraMoving = true;
                     isCameraMoved = true;
                     MinecraftClient.getInstance().options.hudHidden = true;
@@ -61,10 +63,13 @@ public class ModEvents {
     }
 
     public static void tick() {
+        if (cam == null){
+            return;
+        }
+        Extraction.LOGGER.info(String.valueOf(cam.getYaw()));
         if (cameraMoving) {
 //            Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
             Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
-            Extraction.LOGGER.info(String.valueOf(cameraEntity.getYaw()));
 
             if (cameraEntity != null) {
 
@@ -72,8 +77,9 @@ public class ModEvents {
                 double distanceX = target.x - cameraEntity.getPos().x;
                 double distanceY = target.y - cameraEntity.getPos().y;
                 double distanceZ = target.z - cameraEntity.getPos().z;
+                float distanceYaw = targetYaw - cameraEntity.getYaw();
 
-                if (distanceX <= 0.01 && distanceY <= 0.01 && distanceZ <= 0.01) {
+                if (distanceX <= 0.01 && distanceY <= 0.01 && distanceZ <= 0.01 && distanceYaw <= 0.01) {
                     return;
                 }
 
@@ -81,11 +87,14 @@ public class ModEvents {
                 double stepX = distanceX * CAMERA_MOVE_SPEED;
                 double stepY = distanceY * CAMERA_MOVE_SPEED;
                 double stepZ = distanceZ * CAMERA_MOVE_SPEED;
+                float stepYaw = distanceYaw * (float)CAMERA_MOVE_SPEED;
 
                 // Update camera position each tick until it reaches the target position
 
                 cam.updatePosition(cameraEntity.getX() + stepX, cameraEntity.getY() + stepY, cameraEntity.getZ() + stepZ);
+                stepYaw += cam.getYaw();
                 cam.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, blockPos.toCenterPos());
+                cam.setYaw(stepYaw);
     //            assert MinecraftClient.getInstance().world != null;
     //            Entity cam = getNearestEntity(MinecraftClient.getInstance().world, new BlockPos(cameraEntity.getBlockPos()));
     //            cam.addVelocity(0,1,0);
