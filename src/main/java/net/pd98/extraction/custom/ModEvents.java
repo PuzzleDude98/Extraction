@@ -2,6 +2,7 @@ package net.pd98.extraction.custom;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -24,7 +25,8 @@ public class ModEvents {
 
     private static boolean isCameraMoved = false;
     private static boolean cameraMoving = false;
-    static Vec3d target;
+    private static Vec3d target;
+    private static BlockPos blockPos;
     private static final double CAMERA_MOVE_SPEED = 0.1;
 
     static Entity cam;
@@ -33,7 +35,7 @@ public class ModEvents {
         if (hand == Hand.MAIN_HAND) {
             if (hitResult.getType() == HitResult.Type.BLOCK) {
                 Extraction.LOGGER.info("Click!");
-                BlockPos blockPos = ((BlockHitResult) hitResult).getBlockPos();
+                blockPos = ((BlockHitResult) hitResult).getBlockPos();
                 Direction blockFace = ((BlockHitResult) hitResult).getSide();
 
                 if (isCameraMoved) {
@@ -43,13 +45,19 @@ public class ModEvents {
                     isCameraMoved = false;
                 } else {
                     // Otherwise, move camera to the clicked block face
-                    cam = EntityType.ARMOR_STAND.create(MinecraftClient.getInstance().world);
-                    cam.setPosition(player.getX(), player.getY(), player.getZ());
+                    cam = EntityType.MARKER.create(MinecraftClient.getInstance().world);
+//                    cam.setPosition(player.getEyePos());
+//                    cam.setYaw(player.getYaw());
+//                    cam.setPitch(player.getPitch());
                     world.spawnEntity(cam);
+                    cam.setPosition(player.getEyePos());
+                    cam.setYaw(player.getYaw());
+                    cam.setPitch(player.getPitch());
                     MinecraftClient.getInstance().setCameraEntity(cam);
-                    target = new Vec3d((blockPos.getX() + 0.5 + (blockFace.getOffsetX() * 0.5)), (blockPos.getY() + 0.5 + (blockFace.getOffsetY() * 0.5)),(blockPos.getZ()) + 0.5 + (blockFace.getOffsetZ() * 0.5));
+                    target = new Vec3d((blockPos.getX() + 0.5 + (blockFace.getOffsetX() * 1.5)), (blockPos.getY() + 0.5 + (blockFace.getOffsetY() * 1.5)),(blockPos.getZ()) + 0.5 + (blockFace.getOffsetZ() * 1.5));
                     cameraMoving = true;
                     isCameraMoved = true;
+                    MinecraftClient.getInstance().options.hudHidden = true;
                 }
                 return ActionResult.SUCCESS;
             }
@@ -71,11 +79,12 @@ public class ModEvents {
 
                 Extraction.LOGGER.info(String.valueOf(distanceX <= 1));
 
-                if (distanceX <= 1 && distanceY <= 1 && distanceZ <= 1) {
+                if (distanceX <= 0.001 && distanceY <= 0.001 && distanceZ <= 0.001) {
                     Extraction.LOGGER.info("stopping!");
                     cameraMoving = false;
-                    cam.kill();
                     MinecraftClient.getInstance().setCameraEntity(MinecraftClient.getInstance().player);
+                    cam.kill();
+                    MinecraftClient.getInstance().options.hudHidden = false;
                     return;
                 }
 
@@ -86,8 +95,8 @@ public class ModEvents {
 
                 // Update camera position each tick until it reaches the target position
 
-                MinecraftClient.getInstance().getCameraEntity().updatePosition(cameraEntity.getX() + stepX, cameraEntity.getY() + stepY, cameraEntity.getZ() + stepZ);
-                cam.lookAt(EntityAnchorArgumentType.EntityAnchor.FEET, target);
+                cam.updatePosition(cameraEntity.getX() + stepX, cameraEntity.getY() + stepY, cameraEntity.getZ() + stepZ);
+                cam.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, blockPos.toCenterPos());
     //            assert MinecraftClient.getInstance().world != null;
     //            Entity cam = getNearestEntity(MinecraftClient.getInstance().world, new BlockPos(cameraEntity.getBlockPos()));
     //            cam.addVelocity(0,1,0);
