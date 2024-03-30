@@ -23,7 +23,6 @@ public class ModEvents {
     private static Vec3d target;
     private static BlockPos blockPos;
     private static final double CAMERA_MOVE_SPEED = 0.1;
-    private static byte cooldown = 0;
 
     static Entity cam;
 
@@ -31,17 +30,14 @@ public class ModEvents {
         if (hand == Hand.MAIN_HAND && !cameraMoving) {
             if (hitResult.getType() == HitResult.Type.BLOCK) {
                 Extraction.LOGGER.info("Click!");
-                cooldown = 10;
                 blockPos = ((BlockHitResult) hitResult).getBlockPos();
                 Direction blockFace = ((BlockHitResult) hitResult).getSide();
 
-                if (isCameraMoved && cooldown == 0) {
+                if (isCameraMoved) {
                     // If camera is already moved and player right-clicked the same block face again,
                     // move the camera back to the original position
 //                    moveCameraToOriginalPosition();
-                    isCameraMoved = false;
-                    MinecraftClient.getInstance().setCameraEntity(MinecraftClient.getInstance().player);
-                    cam.kill();
+                    kick();
                 } else {
                     // Otherwise, move camera to the clicked block face
                     cam = EntityType.MARKER.create(MinecraftClient.getInstance().world);
@@ -53,8 +49,8 @@ public class ModEvents {
                     cam.setYaw(player.getYaw());
                     cam.setPitch(player.getPitch());
                     MinecraftClient.getInstance().setCameraEntity(cam);
-//                    target = new Vec3d((blockPos.getX() + 0.5 + (blockFace.getOffsetX() * 1.5)), (blockPos.getY() + 0.5 + (blockFace.getOffsetY() * 1.5)),(blockPos.getZ()) + 0.5 + (blockFace.getOffsetZ() * 1.5));
-//                    cameraMoving = true;
+                    target = new Vec3d((blockPos.getX() + 0.5 + (blockFace.getOffsetX() * 1.5)), (blockPos.getY() + 0.5 + (blockFace.getOffsetY() * 1.5)),(blockPos.getZ()) + 0.5 + (blockFace.getOffsetZ() * 1.5));
+                    cameraMoving = true;
                     isCameraMoved = true;
                     MinecraftClient.getInstance().options.hudHidden = true;
                 }
@@ -65,13 +61,10 @@ public class ModEvents {
     }
 
     public static void tick() {
-        if (cooldown > 0) {
-            cooldown--;
-            Extraction.LOGGER.info(String.valueOf(cooldown));
-        }
         if (cameraMoving) {
 //            Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
             Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
+            Extraction.LOGGER.info(String.valueOf(cameraEntity.getYaw()));
 
             if (cameraEntity != null) {
 
@@ -80,14 +73,7 @@ public class ModEvents {
                 double distanceY = target.y - cameraEntity.getPos().y;
                 double distanceZ = target.z - cameraEntity.getPos().z;
 
-                Extraction.LOGGER.info(String.valueOf(distanceX <= 1));
-
-                if (distanceX <= 0.001 && distanceY <= 0.001 && distanceZ <= 0.001) {
-                    Extraction.LOGGER.info("stopping!");
-                    cameraMoving = false;
-                    MinecraftClient.getInstance().setCameraEntity(MinecraftClient.getInstance().player);
-                    cam.kill();
-                    MinecraftClient.getInstance().options.hudHidden = false;
+                if (distanceX <= 0.01 && distanceY <= 0.01 && distanceZ <= 0.01) {
                     return;
                 }
 
@@ -109,10 +95,14 @@ public class ModEvents {
     }
 
     public static void kick() {
-        Extraction.LOGGER.info("Kicking");
-        MinecraftClient.getInstance().setCameraEntity(MinecraftClient.getInstance().player);
-        cam.kill();
-        MinecraftClient.getInstance().options.hudHidden = false;
+        if (cam!=null) {
+            Extraction.LOGGER.info("Kicking");
+            MinecraftClient.getInstance().setCameraEntity(MinecraftClient.getInstance().player);
+            cameraMoving = false;
+            isCameraMoved = false;
+            cam.kill();
+            MinecraftClient.getInstance().options.hudHidden = false;
+        }
     }
 
     public static void debug() {

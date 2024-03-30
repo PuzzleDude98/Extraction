@@ -10,11 +10,11 @@ import org.lwjgl.glfw.GLFW;
 public class ModKeybinds {
     public static KeyBinding keyBinding;
 
-    public static void initialize() {
+    public static void registerKeyBindings() {
         keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.extraction.debug",
                 InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
-                GLFW.GLFW_KEY_R, // The keycode of the key
+                GLFW.GLFW_KEY_ESCAPE, // The keycode of the key
                 "category.extraction.test" // The translation key of the keybinding's category.
         ));
 
