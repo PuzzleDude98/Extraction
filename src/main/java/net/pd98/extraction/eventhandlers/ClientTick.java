@@ -10,7 +10,7 @@ public class ClientTick {
     }
 
     private static void onClientTick(MinecraftClient client) {
-        ModEvents.moveCamera();
+        ModEvents.tick();
     }
 
 }

@@ -1,15 +1,10 @@
 package net.pd98.extraction.custom;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -28,21 +23,25 @@ public class ModEvents {
     private static Vec3d target;
     private static BlockPos blockPos;
     private static final double CAMERA_MOVE_SPEED = 0.1;
+    private static byte cooldown = 0;
 
     static Entity cam;
 
     public static ActionResult MoveCamera(PlayerEntity player, World world, Hand hand, HitResult hitResult) {
-        if (hand == Hand.MAIN_HAND) {
+        if (hand == Hand.MAIN_HAND && !cameraMoving) {
             if (hitResult.getType() == HitResult.Type.BLOCK) {
                 Extraction.LOGGER.info("Click!");
+                cooldown = 10;
                 blockPos = ((BlockHitResult) hitResult).getBlockPos();
                 Direction blockFace = ((BlockHitResult) hitResult).getSide();
 
-                if (isCameraMoved) {
+                if (isCameraMoved && cooldown == 0) {
                     // If camera is already moved and player right-clicked the same block face again,
                     // move the camera back to the original position
 //                    moveCameraToOriginalPosition();
                     isCameraMoved = false;
+                    MinecraftClient.getInstance().setCameraEntity(MinecraftClient.getInstance().player);
+                    cam.kill();
                 } else {
                     // Otherwise, move camera to the clicked block face
                     cam = EntityType.MARKER.create(MinecraftClient.getInstance().world);
@@ -50,12 +49,12 @@ public class ModEvents {
 //                    cam.setYaw(player.getYaw());
 //                    cam.setPitch(player.getPitch());
                     world.spawnEntity(cam);
-                    cam.setPosition(player.getEyePos());
+                    cam.updatePosition(player.getEyePos().getX(), player.getEyePos().getY(), player.getEyePos().getZ());
                     cam.setYaw(player.getYaw());
                     cam.setPitch(player.getPitch());
                     MinecraftClient.getInstance().setCameraEntity(cam);
-                    target = new Vec3d((blockPos.getX() + 0.5 + (blockFace.getOffsetX() * 1.5)), (blockPos.getY() + 0.5 + (blockFace.getOffsetY() * 1.5)),(blockPos.getZ()) + 0.5 + (blockFace.getOffsetZ() * 1.5));
-                    cameraMoving = true;
+//                    target = new Vec3d((blockPos.getX() + 0.5 + (blockFace.getOffsetX() * 1.5)), (blockPos.getY() + 0.5 + (blockFace.getOffsetY() * 1.5)),(blockPos.getZ()) + 0.5 + (blockFace.getOffsetZ() * 1.5));
+//                    cameraMoving = true;
                     isCameraMoved = true;
                     MinecraftClient.getInstance().options.hudHidden = true;
                 }
@@ -65,7 +64,11 @@ public class ModEvents {
         return ActionResult.PASS;
     }
 
-    public static void moveCamera() {
+    public static void tick() {
+        if (cooldown > 0) {
+            cooldown--;
+            Extraction.LOGGER.info(String.valueOf(cooldown));
+        }
         if (cameraMoving) {
 //            Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
             Entity cameraEntity = MinecraftClient.getInstance().getCameraEntity();
@@ -103,6 +106,17 @@ public class ModEvents {
     //            MinecraftClient.getInstance().setCameraEntity(cam);
             }
         }
+    }
+
+    public static void kick() {
+        Extraction.LOGGER.info("Kicking");
+        MinecraftClient.getInstance().setCameraEntity(MinecraftClient.getInstance().player);
+        cam.kill();
+        MinecraftClient.getInstance().options.hudHidden = false;
+    }
+
+    public static void debug() {
+        kick();
     }
     public static Entity getNearestEntity(World world, BlockPos pos) {
         double minDistance = Double.MAX_VALUE;
