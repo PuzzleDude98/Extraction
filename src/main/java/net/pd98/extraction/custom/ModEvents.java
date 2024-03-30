@@ -3,12 +3,16 @@ package net.pd98.extraction.custom;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -59,7 +63,26 @@ public class ModEvents {
             double stepZ = distanceZ * CAMERA_MOVE_SPEED;
 
             // Update camera position each tick until it reaches the target position
-            MinecraftClient.getInstance().getCameraEntity().setPos(cameraEntity.getX() + stepX, cameraEntity.getY() + stepY, cameraEntity.getZ() + stepZ);
+
+//            MinecraftClient.getInstance().getCameraEntity().updatePosition(cameraEntity.getX() + stepX, cameraEntity.getY() + stepY, cameraEntity.getZ() + stepZ);
+            assert MinecraftClient.getInstance().world != null;
+            Entity cam = getNearestEntity(MinecraftClient.getInstance().world, new BlockPos(cameraEntity.getBlockPos()));
+            cam.addVelocity(0,1,0);
+            MinecraftClient.getInstance().setCameraEntity(cam);
         }
+    }
+    public static Entity getNearestEntity(World world, BlockPos pos) {
+        double minDistance = Double.MAX_VALUE;
+        Entity nearestEntity = null;
+
+        for (Entity entity : world.getOtherEntities(null, new Box(pos.getX()-5, pos.getY()-5, pos.getZ()-5, pos.getX()+5, pos.getY()+5, pos.getZ()+5))) {
+            double distance = entity.getPos().distanceTo(Vec3d.of(pos));
+            if (distance < minDistance && !entity.isPlayer()) {
+                minDistance = distance;
+                nearestEntity = entity;
+            }
+        }
+
+        return nearestEntity;
     }
 }

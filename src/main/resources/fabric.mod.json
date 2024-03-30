@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "extraction",
-	"version": "$0.0.1",
+	"version": "0.0.1",
 	"name": "extraction",
 	"description": "Extract pure ores!",
 	"authors": [
