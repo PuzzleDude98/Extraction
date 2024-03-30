@@ -92,9 +92,9 @@ public class ModEvents {
                 // Update camera position each tick until it reaches the target position
 
                 cam.updatePosition(cameraEntity.getX() + stepX, cameraEntity.getY() + stepY, cameraEntity.getZ() + stepZ);
-                stepYaw += cam.getYaw();
+//                stepYaw += cam.getYaw();
                 cam.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, blockPos.toCenterPos());
-                cam.setYaw(stepYaw);
+//                cam.setYaw(stepYaw);
     //            assert MinecraftClient.getInstance().world != null;
     //            Entity cam = getNearestEntity(MinecraftClient.getInstance().world, new BlockPos(cameraEntity.getBlockPos()));
     //            cam.addVelocity(0,1,0);
