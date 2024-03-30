@@ -5,6 +5,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.util.ActionResult;
 import net.pd98.extraction.custom.ModEvents;
+import net.pd98.extraction.eventhandlers.ClientTick;
 import net.pd98.extraction.item.ModItems;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,5 +28,7 @@ public class Extraction implements ModInitializer {
 		ModItems.registerModItems();
 
 		UseBlockCallback.EVENT.register(ModEvents::MoveCamera);
+
+		ClientTick.registerCallback();
 	}
 }
